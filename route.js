@@ -14,6 +14,7 @@ class CalculateRoute {
         // this.coords = this.nameCoords(this.coords);
         var graph = {};
         var edges = {};
+        var obstactleCount = this.obstacle.features.length;
 
         for (let current of this.coords) {
             graph[current[2].toString()] = [];
@@ -27,11 +28,23 @@ class CalculateRoute {
                     // tailor the graph.
                     var path = turf.lineString([current, comparer]);
 
-                    if(
-                        turf.booleanCrosses(path, polygon.features[0]) 
-                        // ||
-                        // turf.booleanCrosses(path, polygon.features[1])
-                    ) {
+                    // let booleanCrossesArray = this.obstacle.features.map(feature => turf.booleanCrosses(path, feature));
+                    let booleanCrosses = false;
+
+                    for (let index = 0; index < obstactleCount; index++) {
+                        let feature =this.obstacle.features[index];
+
+                        if(turf.booleanCrosses(path, feature)) {
+                            // console.log(index);
+                            booleanCrosses = true;
+                            break;
+                        }
+                        
+                    }
+                    
+                    // console.log(booleanCrossesArray);
+                    // let booleanCrosses = booleanCrossesArray.find(bcross => bcross);
+                    if(booleanCrosses) {
                         // console.log("Object:" + [current, comparer]);
                         continue
                     }else {
@@ -221,3 +234,4 @@ class CalculateRoute {
 
 
 // explore ansynchronous code
+// cache the edges

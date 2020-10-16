@@ -236,7 +236,13 @@ var noRoute = document.getElementById("no-route");
 var directionsTab = document.getElementById("direction-tab");
 var activeTab = "";
 var routingButton = document.getElementById("route");
+
+
+var obstacles = JSON.parse(JSON.stringify(polygon));
 var pointsClone = JSON.parse(JSON.stringify(points));
+var roomPoints = JSON.parse(JSON.stringify(points));
+roomPoints.features = roomPoints.features.filter(feature => feature.properties.Name != 'Corridor Point');
+roomPoints.features = roomPoints.features.filter(feature => feature.properties.level == 0);
 
 // floor toggler
 var toggleFloorButtons = document.querySelectorAll(".floor-toggler");
@@ -289,11 +295,20 @@ function floorToggler(e) {
         return coord;
     });
 
+    roomPoints = JSON.parse(JSON.stringify(pointsClone));
+    roomPoints.features = roomPoints.features.filter(feature => feature.properties.Name != 'Corridor Point');
+
     console.log(pointsClone);
     console.log(coords);
+
+    // obstacle
+    let obstacle = polygon.features.filter(feature => feature.properties.level == value);
+
     // update the graph and edges object
-    myRoute = new CalculateRoute(coords, polygon, value);
+    myRoute = new CalculateRoute(coords, turf.featureCollection(obstacle), value);
+    console.time("Create Graph");
     myRoute.createGraph();
+    console.timeEnd("Create Graph");
     
 
 }
@@ -335,7 +350,7 @@ destinationControl.addEventListener("input", function(e) {
 });
 
 function searchAddress(value) {
-    let data = JSON.parse(JSON.stringify(pointsClone));
+    let data = JSON.parse(JSON.stringify(roomPoints));
     data.features = data.features.filter(feature =>{
         if(
             feature.properties.Name.toLowerCase().includes(
@@ -442,10 +457,15 @@ var coords = pointsClone.features.map(feature => {
 });
 
 // function 
-var myRoute = new CalculateRoute(coords, polygon, 0);
+let obstacle = obstacles.features.filter(feature => feature.properties.level == 0);
+
+var myRoute = new CalculateRoute(coords, turf.featureCollection(obstacle), 0);
 var startMarker = new mapboxgl.Marker();
 var destinationMarker = new mapboxgl.Marker();
+
+console.time("Create Graph");
 myRoute.createGraph();
+console.timeEnd("Create Graph");
 
 // trigger routing
 function triggerRounting() {
@@ -583,4 +603,9 @@ function updateDirectionsTab(directions) {
 // tiles color: #FEFAEE, #FEFBEC
 
 
-// DIGITIZE THE FILES
+// Load more points
+// Remove corridor points from search
+// update the obstacles layers
+
+
+// change the 
