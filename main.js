@@ -242,8 +242,10 @@ var pointsClone = JSON.parse(JSON.stringify(points));
 var toggleFloorButtons = document.querySelectorAll(".floor-toggler");
 toggleFloorButtons.forEach(toggleFloorButton => {
     toggleFloorButton.addEventListener("click", function(e) {
+        resetRouter();
         floorToggler(e);
     });
+
 });
 
 function floorToggler(e) {
@@ -389,6 +391,23 @@ function handleClickEvent(e) {
     resultContainer.innerHTML = "";
 }
 
+function resetRouter() {
+    startMarker.remove();
+    destinationMarker.remove();
+
+    map.getSource('route').setData(
+        {
+            "type": "FeatureCollection",
+            "features": []
+        }
+    );
+
+    directionsTab.innerHTML = "";
+    noRoute.innerHTML = "";
+    startControl.value = "";
+    destinationControl.value = "";
+}
+
 // load results
 function RoutingModule() {
     this.activeTab = "";
@@ -424,8 +443,8 @@ var coords = pointsClone.features.map(feature => {
 
 // function 
 var myRoute = new CalculateRoute(coords, polygon, 0);
-var startMarker;
-var destinationMarker;
+var startMarker = new mapboxgl.Marker();
+var destinationMarker = new mapboxgl.Marker();
 myRoute.createGraph();
 
 // trigger routing
@@ -435,11 +454,11 @@ function triggerRounting() {
 
     console.log(startId, stopId);
     // create markers
-    startMarker = new mapboxgl.Marker()
+    startMarker
         .setLngLat([...coords].find(coord => coord[2] == startId).slice(0, 2))
         .addTo(map);
 
-    destinationMarker = new mapboxgl.Marker()
+    destinationMarker 
         .setLngLat([...coords].find(coord => coord[2] == stopId).slice(0, 2))
         .addTo(map);
 
