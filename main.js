@@ -81,10 +81,10 @@ map.on('load', function() {
 
     // 2d second
     map.addLayer({
-        id:"floor-one_2d",
-        source: 'floorone',
-        type:"fill",
-        paint:{
+        'id':"floor-one_2d",
+        'source': 'floorone',
+        'type':"fill",
+        'paint':{
             'fill-color':['get', 'color']
         },
         'layout' :{
@@ -117,14 +117,14 @@ map.on('load', function() {
 
     // 2d second
     map.addLayer({
-        id:"floor-two_2d",
-        source:'floortwo',
-        type:"fill",
-        paint:{
+        'id':"floor-two_2d",
+        'source':'floortwo',
+        'type':"fill",
+        'paint':{
             'fill-color':['get', 'color']
         },
-        layout:{
-            visibility:'none'
+        'layout':{
+            'visibility':'none'
         }
     });
     
@@ -235,6 +235,74 @@ var destinationControl = document.getElementById("destination");
 var noRoute = document.getElementById("no-route");
 var directionsTab = document.getElementById("direction-tab");
 var activeTab = "";
+var routingButton = document.getElementById("route");
+var pointsClone = JSON.parse(JSON.stringify(points));
+
+// floor toggler
+var toggleFloorButtons = document.querySelectorAll(".floor-toggler");
+toggleFloorButtons.forEach(toggleFloorButton => {
+    toggleFloorButton.addEventListener("click", function(e) {
+        floorToggler(e);
+    });
+});
+
+function floorToggler(e) {
+    // get the values
+    let value = e.target.value;
+    let layers = {
+        '0':'ground_2d',
+        '1':'floor-one_2d',
+        '2':'floor-two_2d'
+    };
+
+    let activeLayerId = layers[value];
+
+    console.log("Active: "+ activeLayerId);
+    // set visibility to none
+    for (const key in layers) {
+        let id = layers[key];
+        console.log( map.getLayer(id));
+
+        if(id == activeLayerId) {
+             // set visibility to visible
+            map.setLayoutProperty(activeLayerId,'visibility', 'visible');
+        } else {
+            map.setLayoutProperty(id, 'visibility', 'none');
+        }
+        
+    }
+
+
+    console.log(value);
+    // update the filter datasets
+    pointsClone = JSON.parse(JSON.stringify(points));
+    pointsClone.features = pointsClone.features.filter(feature => feature.properties.level == value);
+
+    // update the points datasets
+    coords = pointsClone.features.map(feature => {
+        let coord = feature.geometry.coordinates;
+    
+        coord.push(feature.properties.fid);
+    
+        return coord;
+    });
+
+    console.log(pointsClone);
+    console.log(coords);
+    // update the graph and edges object
+    myRoute = new CalculateRoute(coords, polygon, value);
+    myRoute.createGraph();
+    
+
+}
+
+routingButton.addEventListener("click", function(e) {
+    if(routerInfo.start == "" || routerInfo.destination == "") {
+        noRoute.innerHTML = "Select a start and destination"
+    } else {
+        triggerRounting();
+    }
+});
 
 startControl.addEventListener("focus", function(e) {
     activeTab = "start";
@@ -265,7 +333,7 @@ destinationControl.addEventListener("input", function(e) {
 });
 
 function searchAddress(value) {
-    let data = JSON.parse(JSON.stringify(points));
+    let data = JSON.parse(JSON.stringify(pointsClone));
     data.features = data.features.filter(feature =>{
         if(
             feature.properties.Name.toLowerCase().includes(
@@ -345,7 +413,8 @@ function RoutingModule() {
 var routerInfo = new RoutingModule();
 
  // get the coordinates of the 
-var coords = points.features.filter(feature => feature.properties.level == 0).map(feature => {
+pointsClone.features = pointsClone.features.filter(feature => feature.properties.level == 0);
+var coords = pointsClone.features.map(feature => {
     let coord = feature.geometry.coordinates;
 
     coord.push(feature.properties.fid);
@@ -364,13 +433,14 @@ function triggerRounting() {
     let startId = routerInfo.getStart();
     let stopId = routerInfo.getDestination();
 
+    console.log(startId, stopId);
     // create markers
     startMarker = new mapboxgl.Marker()
-        .setLngLat([...coords.find(coord => coord[2] == 102)].slice(0, 2))
+        .setLngLat([...coords].find(coord => coord[2] == startId).slice(0, 2))
         .addTo(map);
 
     destinationMarker = new mapboxgl.Marker()
-        .setLngLat([...coords.find(coord => coord[2] == 82)].slice(0, 2))
+        .setLngLat([...coords].find(coord => coord[2] == stopId).slice(0, 2))
         .addTo(map);
 
     // clean the no route text

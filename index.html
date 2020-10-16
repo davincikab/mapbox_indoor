@@ -22,8 +22,20 @@
         margin-bottom: 0;
     }
 
-    .routing-section {
+    .floor-section {
         top:2%;
+        left:4%;
+        position: absolute;
+        background-color: white;
+        padding:0.5em 0.5em;
+        box-shadow:2px 2px 0.4em #343433;
+        width:35%;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .routing-section {
+        top:10%;
         left:4%;
         position: absolute;
         z-index: 2;
@@ -56,7 +68,7 @@
     }
 
     #direction-tab {
-        top: 25%;
+        top: 39%;
         left: 4%;
         position: absolute;
         z-index: 1;
@@ -73,6 +85,23 @@
 </head>
 <body>
     <div id="map"></div>
+    <div class="floor-section">
+        <div>
+            <input type="radio" name="floor" class="floor-toggler" value="0" checked>
+            <label for="floor1">Ground Floor</label>
+        </div>
+        
+        <div>
+            <input type="radio" name="floor" class="floor-toggler" value="1">
+            <label for="floor1">First Floor</label>
+        </div>
+        
+        <div>
+            <input type="radio" name="floor" class="floor-toggler" value="2">
+            <label for="floor1">Second Floor</label>
+        </div>        
+    </div>
+
     <div class="routing-section">
         <div class="form-group">
             <label for="start">Start</label>
@@ -83,6 +112,7 @@
             <input type="text" class="form-control form-control-sm" id="destination">
         </div>
 
+        <button class="btn btn-sm btn-primary mt-2" id="route">Route</button><br>
         <small class="text-danger" id="no-route"></small>
        
         <ul class="list-group list-group-sm" id="list-group">
