@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Extrude polygons for 3D indoor mapping</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+<script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
+<link rel="stylesheet" href="css/bootstrap.css">
+<style>
+	body { margin: 0; padding: 0; }
+	#map { 
+        position: absolute; 
+        top: 0; 
+        bottom: 0; 
+        width: 100%; 
+        z-index: 0;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .routing-section {
+        top:2%;
+        left:4%;
+        position: absolute;
+        z-index: 2;
+        background-color: white;
+        padding:1em 0.5em;
+        box-shadow:2px 2px 0.4em #343433;
+        width:30%;
+    }
+
+    .list-group {
+        position: absolute;
+        top: 50%;
+        transition: all 0.3s ease-in-out;
+        background-color: wheat;
+        width: 95%;
+    }
+
+    .list-group.slide-down {
+        top:90%;
+    }
+
+    .list-group-sm .list-group-item {
+        padding: .25rem 1.25rem;
+        background-color: #fff;
+    }
+
+    .list-group-item p {
+        margin:0;
+        font-size: 1em;
+    }
+
+    #direction-tab {
+        top: 25%;
+        left: 4%;
+        position: absolute;
+        z-index: 1;
+        padding: 1em 0em 0.5em;
+        box-shadow: 2px 2px 0.4em #343433;
+        width: 30%;
+        font-size: 0.9rem;
+    }
+
+    #direction-tab .list-group-item {
+        padding: 0.15rem 0rem;
+    }
+</style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="routing-section">
+        <div class="form-group">
+            <label for="start">Start</label>
+            <input type="text" class="form-control form-control-sm" id="start">
+        </div>
+        <div class="form-group">
+            <label for="destination">Destination</label>
+            <input type="text" class="form-control form-control-sm" id="destination">
+        </div>
+
+        <small class="text-danger" id="no-route"></small>
+       
+        <ul class="list-group list-group-sm" id="list-group">
+
+        </ul>
+    </div>
+
+    <div class="bg-light text-dark mt-1" id="direction-tab">
+        
+    </div>
+    <script src="obstacle.js"></script>
+    <script src="route.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
