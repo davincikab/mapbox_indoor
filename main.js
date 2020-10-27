@@ -20,6 +20,7 @@ var dummyGeojson = {
 };
 
 map.on('load', function() {
+    console.time("Loading Map");
     loadImage(images);
 
     map.addSource('floorplan', {
@@ -192,6 +193,7 @@ map.on('load', function() {
         }
     });
 
+    console.timeEnd("Loading Map");
 });
 
 function loadImage(images) {
@@ -228,12 +230,14 @@ class IndoorLayerControl {
 
     }
 }
-
+var activeFloor = "0";
 var resultContainer = document.getElementById("list-group");
 var startControl = document.getElementById("start")
 var destinationControl = document.getElementById("destination");
 var noRoute = document.getElementById("no-route");
 var directionsTab = document.getElementById("direction-tab");
+var stepsTab = document.getElementById("steps");
+var summaryInfo = document.getElementById("route-summary")
 var activeTab = "";
 var routingButton = document.getElementById("route");
 
@@ -241,7 +245,7 @@ var routingButton = document.getElementById("route");
 var obstacles = JSON.parse(JSON.stringify(polygon));
 var pointsClone = JSON.parse(JSON.stringify(points));
 var roomPoints = JSON.parse(JSON.stringify(points));
-roomPoints.features = roomPoints.features.filter(feature => feature.properties.Name != 'Corridor Point');
+roomPoints.features = roomPoints.features.filter(feature => feature.properties.use != 'Corridor Point');
 roomPoints.features = roomPoints.features.filter(feature => feature.properties.level == 0);
 
 // floor toggler
@@ -263,6 +267,7 @@ function floorToggler(e) {
         '2':'floor-two_2d'
     };
 
+    activeFloor = value;
     let activeLayerId = layers[value];
 
     console.log("Active: "+ activeLayerId);
@@ -306,10 +311,24 @@ function floorToggler(e) {
 
     // update the graph and edges object
     myRoute = new CalculateRoute(coords, turf.featureCollection(obstacle), value);
-    console.time("Create Graph");
-    myRoute.createGraph();
-    console.timeEnd("Create Graph");
+    myRoute.edges = edges[activeFloor];
+
+    // console.time("Create Graph");
+    // myRoute.createGraph();
+
+    // console.timeEnd("Create Graph");
     
+    // update the layer
+    // updateActiveLink(value);
+
+}
+
+function updateActiveLink(value) {
+    const json = JSON.stringify(myRoute.edges);
+    const dataURL = `data:application/json,${json}`;
+    let activeLink = document.getElementById(value);
+
+    activeLink.setAttribute("href", dataURL);
 
 }
 
@@ -317,7 +336,7 @@ routingButton.addEventListener("click", function(e) {
     if(routerInfo.start == "" || routerInfo.destination == "") {
         noRoute.innerHTML = "Select a start and destination"
     } else {
-        triggerRounting();
+        triggerRounting(activeFloor);
     }
 });
 
@@ -396,11 +415,15 @@ function handleClickEvent(e) {
     if(activeTab == "start") {
         routerInfo.setStart(value);
         startControl.value = target.innerText;
+
+        destinationControl.value !== '' ? triggerRounting() : "";
     } else {
 
         console.log("Destionation Control");
         routerInfo.setDestination(value);
         destinationControl.value = target.innerText;
+
+        startControl.value !== '' ? triggerRounting() : "";
     }  
 
     resultContainer.innerHTML = "";
@@ -417,7 +440,8 @@ function resetRouter() {
         }
     );
 
-    directionsTab.innerHTML = "";
+    stepsTab.innerHTML = "";
+    summaryInfo.innerHTML = "<p class='text-danger'>NO ROUTE FOUND</p>";
     noRoute.innerHTML = "";
     startControl.value = "";
     destinationControl.value = "";
@@ -460,11 +484,17 @@ var coords = pointsClone.features.map(feature => {
 let obstacle = obstacles.features.filter(feature => feature.properties.level == 0);
 
 var myRoute = new CalculateRoute(coords, turf.featureCollection(obstacle), 0);
+myRoute.edges = edges[activeFloor];
+
 var startMarker = new mapboxgl.Marker();
 var destinationMarker = new mapboxgl.Marker();
 
 console.time("Create Graph");
-myRoute.createGraph();
+// setTimeout(function(e){
+//     myRoute.createGraph();
+//     updateActiveLink('0');
+// }, 100);
+
 console.timeEnd("Create Graph");
 
 // trigger routing
@@ -484,7 +514,8 @@ function triggerRounting() {
 
     // clean the no route text
     noRoute.innerHTML = "";
-    directionsTab.innerHTML = "";
+    stepsTab.innerHTML = "";
+    summaryInfo.innerHTML = "";
     map.getSource('route').setData(dummyGeojson);
 
     // get the route
@@ -514,8 +545,26 @@ function triggerRounting() {
                 shortestRoute = geojsonData;
                 map.getSource('route').setData(geojsonData);
 
+                // directions tabs
                 let directions = getDirections(data);
                 updateDirectionsTab(directions);
+
+                // update summary Information
+                let distance = turf.length(geojsonData) * 1000;
+                let time = distance / 1.2;
+
+                if(time > 60) {
+                    let minutes = Math.floor(time / 60);
+                    let seconds = Math.ceil(time % 60);
+
+                    time = minutes + "min " + seconds + "secs"
+                } else {
+                    let seconds = Math.ceil(time);
+                    time =  seconds + "secs"
+                }
+
+                summaryInfo.innerHTML = "";
+                summaryInfo.innerHTML ="<h5><span class='text-success'>"+ time +"   </span>(" + Math.ceil(distance) +" m)</h5><p>Via Main Corridor</p>" ;
             } else {
                 noRoute.innerHTML = data;
             }
@@ -578,25 +627,27 @@ function updateDirectionsTab(directions) {
     let docFrag = document.createDocumentFragment();
     directions.forEach((direction, i) => {
         let listItem = document.createElement("li");
-        listItem.setAttribute("class", "list-group-item");
+        
+        listItem.setAttribute("data-key", direction.from);
 
         if(i == 0) {
-            listItem.innerHTML = "<p><b>"+ direction.from +"</b></p>"+
-                "<small>0m</small>"
+            listItem.innerHTML = "<h5><b>"+ direction.from +"</b></h5>"
         } else if(i == directions.length -1) {
-            listItem.innerHTML = "<small>Destination: <b>"+ direction.from +"</b></small>"
-        }
+            listItem.innerHTML = "<h5><b>"+ direction.from +"</b></small>"
+        } 
         else {
-            listItem.innerHTML = "<p>"+ direction.from +"</p>"+
-                "<small> Head "+direction.bearing +" on  </small>"+
-                "<small> "+direction.distance+"m </small>"
+            listItem.innerHTML = "<p>"+
+                "<small> Head " + direction.bearing +" on  </small></p>"+
+                "<small><strong> "+ direction.distance +" m <strong></small>";
+            
+            listItem.setAttribute("class", "list-group-item");
         }
 
         docFrag.append(listItem);
     });
 
-    directionsTab.innerHTML = "";
-    directionsTab.append(docFrag);
+    stepsTab.innerHTML = "";
+    stepsTab.append(docFrag);
 }
 
 // #F7F6EC', '#707D82'
@@ -604,8 +655,4 @@ function updateDirectionsTab(directions) {
 
 
 // Load more points
-// Remove corridor points from search
-// update the obstacles layers
-
-
 // change the 

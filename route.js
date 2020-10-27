@@ -31,8 +31,9 @@ class CalculateRoute {
                     // let booleanCrossesArray = this.obstacle.features.map(feature => turf.booleanCrosses(path, feature));
                     let booleanCrosses = false;
 
+                    console.time("Crosses");
                     for (let index = 0; index < obstactleCount; index++) {
-                        let feature =this.obstacle.features[index];
+                        let feature = this.obstacle.features[index];
 
                         if(turf.booleanCrosses(path, feature)) {
                             // console.log(index);
@@ -42,6 +43,7 @@ class CalculateRoute {
                         
                     }
                     
+                    console.timeEnd("Crosses");
                     // console.log(booleanCrossesArray);
                     // let booleanCrosses = booleanCrossesArray.find(bcross => bcross);
                     if(booleanCrosses) {
@@ -192,12 +194,13 @@ class CalculateRoute {
         return shortest;
     }
 
-    getRoute(start, stop) {
+    getRoute(start, stop, edges) {
         // let [graph, edges] = this.createGraph();
         console.time("graph");
-        if(!this.edges) {
-            this.createGraph();
+        if(edges) {
+            this.edges = edges;
         }
+        
         console.timeEnd("graph");
 
         console.time("ShortestPath");   
@@ -234,4 +237,4 @@ class CalculateRoute {
 
 
 // explore ansynchronous code
-// cache the edges
+// cache the edges: 

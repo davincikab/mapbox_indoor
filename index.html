@@ -9,11 +9,15 @@
 <script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
 <link rel="stylesheet" href="css/bootstrap.css">
 <style>
-	body { margin: 0; padding: 0; }
+	body { 
+        margin: 0; 
+        padding: 0; 
+    }
+
 	#map { 
         position: absolute; 
-        top: 0; 
-        bottom: 0; 
+        top: 10%; 
+        bottom: 10%; 
         width: 100%; 
         z-index: 0;
     }
@@ -29,25 +33,26 @@
         background-color: white;
         padding:0.5em 0.5em;
         box-shadow:2px 2px 0.4em #343433;
-        width:35%;
+        width:90%;
         display: flex;
         justify-content: space-between;
     }
 
     .routing-section {
-        top:10%;
-        left:4%;
+        top:0%;
+        left:0%;
+        height: 15%;
         position: absolute;
         z-index: 2;
         background-color: white;
         padding:1em 0.5em;
         box-shadow:2px 2px 0.4em #343433;
-        width:30%;
+        width:100%;
     }
 
     .list-group {
         position: absolute;
-        top: 50%;
+        top: 100%;
         transition: all 0.3s ease-in-out;
         background-color: wheat;
         width: 95%;
@@ -68,51 +73,121 @@
     }
 
     #direction-tab {
-        top: 39%;
-        left: 4%;
+        top: 80%;
+        left: 0%;
+        width: 100%;
+        bottom: 0%;
         position: absolute;
         z-index: 1;
         padding: 1em 0em 0.5em;
         box-shadow: 2px 2px 0.4em #343433;
-        width: 30%;
         font-size: 0.9rem;
     }
 
+    #direction-tab.open {
+        top:10%;
+    }
+
     #direction-tab .list-group-item {
-        padding: 0.15rem 0rem;
+        padding: 0.5rem 0.8rem;
+        font-size: 1rem;
+    }
+
+    #route-summary{
+        color:#929292ee;
+    }
+
+    #route-summary h5, p{
+        margin:0;
+    }
+
+    .steps {
+        padding: 0.5em;
+        height: 69vh;
+        background-color: wheat;
+        overflow: auto;
+    }
+
+    .steps h5 {
+        font-size: 1rem;
+    }
+    .steps li {
+        list-style: none;
+    }
+
+    .fixed-nav {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        height: 8vh;
+        display: flex;
+        z-index: 2;
+        background-color: #808080;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .fixed-nav div {
+        flex: 0.5;
+    }
+    @media (min-width: 50rem) {
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+        }
+        .floor-section {
+            width:35%;
+        }
+
+        .routing-section {
+            width: 30%;
+
+        }
+        #direction-tab {
+            top: 14%;
+            width:30%;
+            overflow: auto;
+        }
+
+        .fixed-nav {
+            display: none;
+        }
     }
 </style>
 </head>
 <body>
     <div id="map"></div>
-    <div class="floor-section">
+    <div class="floor-section d-none">
         <div>
             <input type="radio" name="floor" class="floor-toggler" value="0" checked>
             <label for="floor1">Ground Floor</label>
+            <!-- <a href="" download="ground_edges.json" id="0">Edges</a> -->
         </div>
         
         <div>
             <input type="radio" name="floor" class="floor-toggler" value="1">
             <label for="floor1">First Floor</label>
+            <!-- <a href="" download="first_edges.json" id="1">Edges</a> -->
         </div>
         
         <div>
             <input type="radio" name="floor" class="floor-toggler" value="2">
             <label for="floor1">Second Floor</label>
+            <!-- <a href="" download="second_edges.json" id="2">Edges</a> -->
         </div>        
     </div>
 
     <div class="routing-section">
-        <div class="form-group">
-            <label for="start">Start</label>
-            <input type="text" class="form-control form-control-sm" id="start">
+        <div class="form-group mb-2">
+            <input type="text" class="form-control form-control-sm" id="start"  placeholder="Start ....">
         </div>
         <div class="form-group">
-            <label for="destination">Destination</label>
-            <input type="text" class="form-control form-control-sm" id="destination">
+            <input type="text" class="form-control form-control-sm" id="destination" placeholder="Destination ....">
         </div>
 
-        <button class="btn btn-sm btn-primary mt-2" id="route">Route</button><br>
+        <button class="btn btn-sm btn-primary mt-2 d-none" id="route">Route</button><br>
         <small class="text-danger" id="no-route"></small>
        
         <ul class="list-group list-group-sm" id="list-group">
@@ -121,9 +196,29 @@
     </div>
 
     <div class="bg-light text-dark mt-1" id="direction-tab">   
+        <div id="route-summary" class="py-2 px-2">
+
+        </div>
+        <div id="steps" class="steps">
+
+        </div>
     </div>
+
+    <div class="fixed-nav">
+        <div class="steps-toggler" id="steps-toggler">
+            <button class="btn btn-lg"> <span>&#x2630; Steps</span></button>
+        </div>
+        <div class="reset-map">
+            <button class="btn btn-lg">RESET MAP</button>
+        </div>
+    </div>
+
+    <script src="edges.js"></script>
     <script src="obstacle.js"></script>
     <script src="route.js"></script>
     <script src="main.js"></script>
+
+    <!-- TODO: Auto Route -->
+    <!--  -->
 </body>
 </html>
