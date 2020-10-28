@@ -82,10 +82,11 @@
         padding: 1em 0em 0.5em;
         box-shadow: 2px 2px 0.4em #343433;
         font-size: 0.9rem;
+        transition: all 0.4s;
     }
 
     #direction-tab.open {
-        top:10%;
+        top:12%;
     }
 
     #direction-tab .list-group-item {
@@ -103,7 +104,7 @@
 
     .steps {
         padding: 0.5em;
-        height: 69vh;
+        height: 67vh;
         background-color: wheat;
         overflow: auto;
     }
@@ -130,6 +131,35 @@
     .fixed-nav div {
         flex: 0.5;
     }
+
+    .carousel-container {
+        position: absolute;
+        bottom: 0%;
+        height: 20vh;
+        z-index: 3;
+        background-color: #808080;
+        width: 100%;
+    }
+
+    .carousel-container #direction-card {
+        width: auto;
+        overflow: hidden;
+        position: absolute;
+        top: 0%;
+    }
+
+    .control-section {
+        width: 100%;
+        background-color: red;
+        padding: 14px;
+        position: absolute;
+        bottom: 0%;
+    }
+
+    #direction-card  .list-group-item {
+        width: 100vw;
+        height: 15vh;
+    }
     @media (min-width: 50rem) {
         #map { 
             position: absolute; 
@@ -151,6 +181,9 @@
             overflow: auto;
         }
 
+        .steps {
+            height: 69vh;
+        }
         .fixed-nav {
             display: none;
         }
@@ -205,19 +238,39 @@
     </div>
 
     <div class="fixed-nav">
-        <div class="steps-toggler" id="steps-toggler">
-            <button class="btn btn-lg"> <span>&#x2630; Steps</span></button>
+        <div class="steps-toggler" >
+            <button class="btn btn-lg w-100" id="steps-toggler"><span>&#x2630; Steps</span></button>
         </div>
         <div class="reset-map">
-            <button class="btn btn-lg">RESET MAP</button>
+            <button class="btn btn-lg w-100" id="preview-steps">PREVIEW</button>
         </div>
     </div>
+
+    <div class="carousel-container">
+        <div class="list-group list-group-horizontal" id="direction-card">
+            <li class="list-group-item">Cras justo odio</li>
+            <li class="list-group-item">Dapibus ac facilisis in</li>
+            <li class="list-group-item">Cras justo odio</li>
+        </div>
+    
+        <div class="control-section">
+            <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+              </a>
+              <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+    </div>
+    
 
     <script src="edges.js"></script>
     <script src="obstacle.js"></script>
     <script src="route.js"></script>
     <script src="main.js"></script>
-
+    <script src="interaction.js"></script>
     <!-- TODO: Auto Route -->
     <!--  -->
 </body>
