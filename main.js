@@ -188,7 +188,7 @@ map.on('load', function() {
             'line-cap': 'round'
         },
         'paint': {
-            'line-color': '#fff',
+            'line-color': '#dc3545',
             'line-width': 8
         }
     });
@@ -230,6 +230,8 @@ class IndoorLayerControl {
 
     }
 }
+
+var directionCard = document.getElementById("direction-card");
 var activeFloor = "0";
 var resultContainer = document.getElementById("list-group");
 var startControl = document.getElementById("start")
@@ -589,8 +591,8 @@ function getDirections(data) {
             direction.from = getPointName(directionCoords[i][2]);
         } else {
             direction.from = getPointName(directionCoords[i][2]);
-            direction.distance = getDistance(directionCoords[i], directionCoords[i+1]);
-            direction.bearing = getBearing(directionCoords[i], directionCoords[i+1])
+            direction.distance = getDistance(directionCoords[i], directionCoords[i-1]);
+            direction.bearing = getBearing(directionCoords[i], directionCoords[i-1])
         }   
 
         directionObj.push(direction);
@@ -619,12 +621,19 @@ function getBearing(p1, p2) {
 }
 
 function getPointName(fid) {
-    console.log(fid)
+    // console.log(fid)
     return points.features.find(feature => feature.properties.fid == fid).properties.Name;
 }
 
 function updateDirectionsTab(directions) {
     let docFrag = document.createDocumentFragment();
+
+     // update the preview 
+     directionCard.innerHTML = "";
+     console.log(docFrag);
+     
+    directionCard.style.width = directions.length * 100 + "%";
+ 
     directions.forEach((direction, i) => {
         let listItem = document.createElement("li");
         
@@ -632,22 +641,39 @@ function updateDirectionsTab(directions) {
 
         if(i == 0) {
             listItem.innerHTML = "<h5><b>"+ direction.from +"</b></h5>"
+            directionCard.innerHTML += "<li class='list-group-item'>"+directions.from +"<strong>";
         } else if(i == directions.length -1) {
-            listItem.innerHTML = "<h5><b>"+ direction.from +"</b></small>"
+            listItem.innerHTML = "<h5>You have a arrived at you destination: <b>"+ direction.from +"</b></small>"
+            directionCard.innerHTML += "<li class='list-group-item'>"+ directions.from +"<strong>";
         } 
         else {
+            let angle = directions[i].bearing - directions[i-1].bearing;
+            angle = angle < 0 ? angle + 2 * 180 : angle;
+            console.log(angle);
+
+            console.log(!Boolean(angle));
+            let turn = !Boolean(angle) ? "No Turn": angle == 0  ? "Head Straight" : angle < 180 ? 'Turn Left' : "Turn Right";
+
             listItem.innerHTML = "<p>"+
-                "<small> Head " + direction.bearing +" on  </small></p>"+
+                "<small> "+ turn + " on  </small></p>"+
                 "<small><strong> "+ direction.distance +" m <strong></small>";
             
             listItem.setAttribute("class", "list-group-item");
+            console.log("Card");
+            
+            directionCard.innerHTML += "<li class='list-group-item'>"+ turn +"<strong> "+ direction.distance +" m <strong></li>"
         }
 
+        
         docFrag.append(listItem);
     });
 
     stepsTab.innerHTML = "";
     stepsTab.append(docFrag);
+
+    listGroupCards = document.querySelectorAll("#direction-card .list-group-item");
+    listGroupCardsLength = listGroupCards.length - 1;
+   
 }
 
 // #F7F6EC', '#707D82'

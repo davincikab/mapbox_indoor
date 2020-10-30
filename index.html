@@ -134,32 +134,48 @@
 
     .carousel-container {
         position: absolute;
-        bottom: 0%;
+        bottom: 7%;
         height: 20vh;
         z-index: 3;
-        background-color: #808080;
+        background-color: #80808005;
         width: 100%;
+        overflow: hidden;
     }
 
     .carousel-container #direction-card {
-        width: auto;
-        overflow: hidden;
+        width: 300%;
         position: absolute;
         top: 0%;
+        display: flex;
+        transition: all 0.5s;
+        left: 0;
+        padding: 12px;
     }
 
     .control-section {
         width: 100%;
-        background-color: red;
-        padding: 14px;
+        background-color: rgb(197, 197, 197);
+        padding: 4px;
         position: absolute;
         bottom: 0%;
     }
 
     #direction-card  .list-group-item {
-        width: 100vw;
-        height: 15vh;
+        /* width: 100%;
+        height: 15vh; */
+        width: 90%;
+        height: 20vw;
+        margin: 0 5%;
+        overflow: hidden;
+        float: left;
     }
+
+    .close {
+        position: absolute;
+        top:2%;
+        right:4%;
+    }
+
     @media (min-width: 50rem) {
         #map { 
             position: absolute; 
@@ -184,8 +200,29 @@
         .steps {
             height: 69vh;
         }
+
         .fixed-nav {
             display: none;
+        }
+
+        .carousel-container {
+            left:30%;
+            bottom: 0;
+            right: 0;
+            width: auto;
+        }
+
+        .direction-card {
+            padding: 8px;
+        }
+
+        
+        #direction-card .list-group-item {
+            height: 6vw;
+        }
+
+        .carousel-container .list-group {
+            width: 80%;
         }
     }
 </style>
@@ -247,18 +284,20 @@
     </div>
 
     <div class="carousel-container">
-        <div class="list-group list-group-horizontal" id="direction-card">
+        <span class="close" id="close-btn">&times;</span>
+        <div class="direction-card" id="direction-card">
             <li class="list-group-item">Cras justo odio</li>
             <li class="list-group-item">Dapibus ac facilisis in</li>
-            <li class="list-group-item">Cras justo odio</li>
+            <li class="list-group-item">Mappa</li>
         </div>
     
-        <div class="control-section">
+        <div class="control-section text-center">
+            <span>Home Coming</span>
             <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="sr-only">Previous</span>
-              </a>
-              <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+            </a>
+            <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="sr-only">Next</span>
             </a>
