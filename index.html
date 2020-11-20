@@ -202,6 +202,25 @@
         float: left;
     }
 
+    .start-marker {
+        border-radius: 50%;
+        width:20px;
+        height: 20px;
+        background-color: brown;
+        color:white;
+        font-weight:700;
+        text-align:center;
+    }
+
+    .destination-marker {
+        border-radius: 50%;
+        width:20px;
+        height: 20px;
+        background-color: blue;
+        color:white;
+        font-weight:700;
+        text-align:center;
+    }
     .close {
         position: absolute;
         top:2%;
@@ -294,7 +313,7 @@
         </div>        
     </div>
 
-    <div class="search-section" id="search-section">
+    <div class="search-section d-none" id="search-section">
         <div class="input-group input-group-sm mb-1">
             <input type="text" class="form-control form-control-sm" id="search"  placeholder="Search... " autofocus>
             <div class="input-group-append bg-none">
@@ -309,7 +328,7 @@
         </div>
     </div>
 
-    <div class="routing-section d-none" id="routing-section">
+    <div class="routing-section" id="routing-section">
         <div class="input-group input-group-sm mb-2">
             <input type="text" class="form-control form-control-sm" id="start"  placeholder="Start ...." autofocus>
             <div class="input-group-append bg-none">

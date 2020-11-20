@@ -376,10 +376,30 @@ routingButton.addEventListener("click", function(e) {
 
 spanClearStart.addEventListener("click", function(e) {
     startControl.value = "";
+    
+    stepsTab.innerHTML = "";
+    summaryInfo.innerHTML = ""
+
+    map.getSource('route').setData({
+        'type':'FeatureCollection',
+        'features':[]
+    });
+
+    startMarker.remove();
 });
 
 spanClearDestination.addEventListener("click", function(e) {
     destinationControl.value = "";
+
+    stepsTab.innerHTML = "";
+    summaryInfo.innerHTML = ""
+
+    map.getSource('route').setData({
+        'type':'FeatureCollection',
+        'features':[]
+    });
+
+    destinationMarker.remove();
 });
 
 toggleDirectionTab.addEventListener("click", function(e) {
@@ -544,8 +564,17 @@ let obstacle = obstacles.features.filter(feature => feature.properties.level == 
 var myRoute = new CalculateRoute(coords, turf.featureCollection(obstacle), 0);
 myRoute.edges = edges[activeFloor];
 
-var startMarker = new mapboxgl.Marker();
-var destinationMarker = new mapboxgl.Marker();
+let startElement = document.createElement('div');
+startElement.innerHTML = "S";
+startElement.classList.add("start-marker");
+
+var startMarker = new mapboxgl.Marker({element:startElement});
+
+let destinationElement = document.createElement('div');
+destinationElement.innerHTML = "D";
+destinationElement.classList.add("destination-marker");
+
+var destinationMarker = new mapboxgl.Marker({element:destinationElement});
 
 console.time("Create Graph");
 // setTimeout(function(e){
@@ -604,6 +633,7 @@ function triggerRounting() {
                 map.getSource('route').setData(geojsonData);
 
                 // directions tabs
+                directionsTab.classList.remove('d-none');
                 let directions = getDirections(data);
                 updateDirectionsTab(directions);
 
