@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>Extrude polygons for 3D indoor mapping</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 <script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
 <link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
 <script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
@@ -25,6 +26,18 @@
     .form-group {
         margin-bottom: 0;
     }
+
+    .search-section {
+        top:0%;
+        left:0%;
+        position: absolute;
+        width:100%;
+        display: flex;
+        justify-content: space-between;
+        padding:0.5em 0.5em;
+        background-color: white;
+    }
+
 
     .floor-section {
         top:2%;
@@ -92,6 +105,25 @@
     #direction-tab .list-group-item {
         padding: 0.5rem 0.8rem;
         font-size: 1rem;
+    }
+
+    .input-group .form-control {
+        /* border-right: 0px solid transparent; */
+        border-color:transparent transparent #ddd transparent
+    }
+
+    .input-group .form-control:focus {
+        outline: 0px !important;
+        box-shadow: none;
+    }
+
+    .bg-none span{
+        background-color: transparent;
+        border-color:transparent transparent #ddd transparent
+    }
+
+    .align-center {
+        align-items: center;
     }
 
     #route-summary{
@@ -176,6 +208,20 @@
         right:4%;
     }
 
+    /*  */
+    .floor-control {
+        background-color: white;
+        border:1px solid #d5d5d5;
+        color:black;
+        padding:0.5em 0.8em;
+        font-weight: 700;
+    }
+
+    .floor-active {
+        background-color: black;
+        color:white;
+    }
+
     @media (min-width: 50rem) {
         #map { 
             position: absolute; 
@@ -187,9 +233,8 @@
             width:35%;
         }
 
-        .routing-section {
+        .routing-section, .search-section{
             width: 30%;
-
         }
         #direction-tab {
             top: 14%;
@@ -249,12 +294,36 @@
         </div>        
     </div>
 
-    <div class="routing-section">
-        <div class="form-group mb-2">
-            <input type="text" class="form-control form-control-sm" id="start"  placeholder="Start ....">
+    <div class="search-section" id="search-section">
+        <div class="input-group input-group-sm mb-1">
+            <input type="text" class="form-control form-control-sm" id="search"  placeholder="Search... " autofocus>
+            <div class="input-group-append bg-none">
+              <span class="input-group-text search" id="basic-addon2">
+                 <i class="fa fa-search"></i>
+              </span>
+            </div>
         </div>
-        <div class="form-group">
+
+        <div class="d-flex ml-2 align-center" id="toggle-direction">
+           <img src="images/directions.png" alt="" class="" height="20" >
+        </div>
+    </div>
+
+    <div class="routing-section d-none" id="routing-section">
+        <div class="input-group input-group-sm mb-2">
+            <input type="text" class="form-control form-control-sm" id="start"  placeholder="Start ...." autofocus>
+            <div class="input-group-append bg-none">
+              <span class="input-group-text start" id="basic-addon2">
+                  <i class="fa fa-search"></i>
+              </span>
+            </div>
+        </div>
+
+        <div class="input-group input-group-sm">
             <input type="text" class="form-control form-control-sm" id="destination" placeholder="Destination ....">
+            <div class="input-group-append bg-none">
+              <span class="input-group-text destination" id="basic-addon2"></span>
+            </div>
         </div>
 
         <button class="btn btn-sm btn-primary mt-2 d-none" id="route">Route</button><br>
@@ -265,7 +334,7 @@
         </ul>
     </div>
 
-    <div class="bg-light text-dark mt-1" id="direction-tab">   
+    <div class="bg-light text-dark mt-1 d-none" id="direction-tab">   
         <div id="route-summary" class="py-2 px-2">
 
         </div>
@@ -283,7 +352,7 @@
         </div>
     </div>
 
-    <div class="carousel-container">
+    <div class="carousel-container d-none">
         <span class="close" id="close-btn">&times;</span>
         <div class="direction-card" id="direction-card">
             <li class="list-group-item">Cras justo odio</li>

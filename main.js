@@ -146,7 +146,7 @@ map.on('load', function() {
             'fill-extrusion-opacity': 1,
         },
         'layout' :{
-            'visibility':'visible'
+            'visibility':'none'
         }
     });
 
@@ -166,7 +166,8 @@ map.on('load', function() {
         },
         layout:{
             'icon-image':'marker-15',
-            'icon-size':2
+            'icon-size':2,
+            'visibility':'none'
         }   
     });
 
@@ -189,7 +190,7 @@ map.on('load', function() {
         },
         'paint': {
             'line-color': '#dc3545',
-            'line-width': 8
+            'line-width': 5
         }
     });
 
@@ -198,7 +199,7 @@ map.on('load', function() {
 
 function loadImage(images) {
     images.forEach(imageName => {
-        map.loadImage("./"+imageName+".jpg", function(error, image) {
+        map.loadImage("./images/"+imageName+".jpg", function(error, image) {
             if(error) {
                 console.log(error);
                 return;
@@ -215,25 +216,59 @@ function loadImage(images) {
 
 // create a mapbox control 
 class IndoorLayerControl {
-    constructor() {
+    onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'mapboxgl-ctrl';
 
+        let floors = [2, 1, 0];
+
+        floors.forEach(floor => {
+            let div = document.createElement('div');
+            div.classList.add('floor-control')
+            
+            if(floor == 0) {
+                div.classList.add('floor-active');
+            }
+            div.innerHTML = floor;
+
+            div.addEventListener('click', function(e) {
+                let floorControls = document.querySelectorAll('.floor-control');
+                floorControls.forEach(floorControl => {
+                    floorControl.classList.remove('floor-active');
+                });
+
+                // update the floor plans
+                let value = this.innerText;
+                floorToggler(value);
+
+                this.classList.add('floor-active');
+            });
+
+            this._container.appendChild(div);
+        });
+
+        return this._container;
     }
-
-    toggleLayer() {
-
-    }
-    onAdd() {
-
-    }
-
-    remove() {
-
+         
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
     }
 }
+
+map.addControl(new IndoorLayerControl(), 'bottom-right');
 
 var directionCard = document.getElementById("direction-card");
 var activeFloor = "0";
 var resultContainer = document.getElementById("list-group");
+var toggleDirectionTab = document.getElementById("toggle-direction");
+var searchTab = document.getElementById("search-section");
+var routingTab = document.getElementById("routing-section");
+
+var spanClearDestination = document.getElementsByClassName('destination')[0];
+var spanClearStart = document.getElementsByClassName('start')[0];
+
 var startControl = document.getElementById("start")
 var destinationControl = document.getElementById("destination");
 var noRoute = document.getElementById("no-route");
@@ -247,6 +282,7 @@ var routingButton = document.getElementById("route");
 var obstacles = JSON.parse(JSON.stringify(polygon));
 var pointsClone = JSON.parse(JSON.stringify(points));
 var roomPoints = JSON.parse(JSON.stringify(points));
+
 roomPoints.features = roomPoints.features.filter(feature => feature.properties.use != 'Corridor Point');
 roomPoints.features = roomPoints.features.filter(feature => feature.properties.level == 0);
 
@@ -255,14 +291,13 @@ var toggleFloorButtons = document.querySelectorAll(".floor-toggler");
 toggleFloorButtons.forEach(toggleFloorButton => {
     toggleFloorButton.addEventListener("click", function(e) {
         resetRouter();
-        floorToggler(e);
+        floorToggler(e.target.value);
     });
 
 });
 
-function floorToggler(e) {
+function floorToggler(value) {
     // get the values
-    let value = e.target.value;
     let layers = {
         '0':'ground_2d',
         '1':'floor-one_2d',
@@ -305,9 +340,6 @@ function floorToggler(e) {
     roomPoints = JSON.parse(JSON.stringify(pointsClone));
     roomPoints.features = roomPoints.features.filter(feature => feature.properties.Name != 'Corridor Point');
 
-    console.log(pointsClone);
-    console.log(coords);
-
     // obstacle
     let obstacle = polygon.features.filter(feature => feature.properties.level == value);
 
@@ -342,13 +374,32 @@ routingButton.addEventListener("click", function(e) {
     }
 });
 
+spanClearStart.addEventListener("click", function(e) {
+    startControl.value = "";
+});
+
+spanClearDestination.addEventListener("click", function(e) {
+    destinationControl.value = "";
+});
+
+toggleDirectionTab.addEventListener("click", function(e) {
+    searchTab.classList.add('d-none');
+    routingTab.classList.remove('d-none');
+});
+
+
 startControl.addEventListener("focus", function(e) {
     activeTab = "start";
     resultContainer.innerHTML = "";
     resultContainer.classList.remove("slide-down");
+
+    spanClearStart.innerHTML = '<i class="fa fa-search"></i>';
+    spanClearDestination.innerHTML = '';
 });
 
 startControl.addEventListener("input", function(e) {
+    spanClearStart.innerHTML = '<i class="fa fa-times"></i>';
+
     let features = searchAddress(e.target.value);
     updateSearchResultContainer(features);
 });
@@ -358,10 +409,15 @@ destinationControl.addEventListener("focus", function(e) {
     resultContainer.innerHTML = "";
 
     resultContainer.classList.add("slide-down");
+  
 
+    spanClearStart.innerHTML = '';
+    spanClearDestination.innerHTML = '<i class="fa fa-search"></i>';
 });
 
 destinationControl.addEventListener("input", function(e) {
+    spanClearDestination.innerHTML = '<i class="fa fa-times"></i>';
+
     if(!this.value) {
         resultContainer.innerHTML = "";
     }
