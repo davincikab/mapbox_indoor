@@ -8,9 +8,14 @@ var map = new mapboxgl.Map({
     pitch: 40,
     bearing: 21,
     antialias: true,
-    hash:true
 });
 
+// route marker
+var routeElement = document.createElement('div');
+routeElement.classList.add('route-marker');
+var positionMarker = new mapboxgl.Marker({element:routeElement});
+
+// images
 let images = ['blue', 'cream', 'texture_25', 'tiles', 'magenta'];
 var shortestRoute;
 
@@ -263,6 +268,7 @@ var directionCard = document.getElementById("direction-card");
 var activeFloor = "0";
 var resultContainer = document.getElementById("list-group");
 var toggleDirectionTab = document.getElementById("toggle-direction");
+var toggleRouteTab = document.getElementById("toggle-route-tab");
 var searchTab = document.getElementById("search-section");
 var routingTab = document.getElementById("routing-section");
 
@@ -347,13 +353,6 @@ function floorToggler(value) {
     myRoute = new CalculateRoute(coords, turf.featureCollection(obstacle), value);
     myRoute.edges = edges[activeFloor];
 
-    // console.time("Create Graph");
-    // myRoute.createGraph();
-
-    // console.timeEnd("Create Graph");
-    
-    // update the layer
-    // updateActiveLink(value);
 
 }
 
@@ -405,6 +404,18 @@ spanClearDestination.addEventListener("click", function(e) {
 toggleDirectionTab.addEventListener("click", function(e) {
     searchTab.classList.add('d-none');
     routingTab.classList.remove('d-none');
+    directionsTab.classList.remove('d-none');
+});
+
+toggleRouteTab.addEventListener("click", function(e) {
+    searchTab.classList.remove('d-none');
+    routingTab.classList.add('d-none');
+    directionsTab.classList.add('d-none');
+
+    startMarker.remove();
+    destinationMarker.remove();
+    map.getSource('route').setData({'type':'FeatureCollection', 'features':[]});
+
 });
 
 
@@ -495,14 +506,34 @@ function handleClickEvent(e) {
         startControl.value = target.innerText;
 
         destinationControl.value !== '' ? triggerRounting() : "";
+
+        // create markers
+        let startId = routerInfo.getStart();
+        let coordinates = [...coords].find(coord => coord[2] == startId).slice(0, 2)
+        startMarker
+        .setLngLat(coordinates)
+        .addTo(map);
+
+        map.flyTo({
+            center:coordinates,
+            zoom:21
+        });
+
     } else {
 
-        console.log("Destionation Control");
         routerInfo.setDestination(value);
         destinationControl.value = target.innerText;
 
         startControl.value !== '' ? triggerRounting() : "";
-    }  
+
+        // update marker
+       
+        let stopId = routerInfo.getDestination();
+        destinationMarker 
+        .setLngLat([...coords].find(coord => coord[2] == stopId).slice(0, 2))
+        .addTo(map);
+    }
+
 
     resultContainer.innerHTML = "";
 }
@@ -566,13 +597,13 @@ myRoute.edges = edges[activeFloor];
 
 let startElement = document.createElement('div');
 startElement.innerHTML = "S";
-startElement.classList.add("start-marker");
+startElement.classList.add("direction-marker","start-marker");
 
 var startMarker = new mapboxgl.Marker({element:startElement});
 
 let destinationElement = document.createElement('div');
 destinationElement.innerHTML = "D";
-destinationElement.classList.add("destination-marker");
+destinationElement.classList.add("direction-marker", "destination-marker");
 
 var destinationMarker = new mapboxgl.Marker({element:destinationElement});
 
@@ -590,14 +621,6 @@ function triggerRounting() {
     let stopId = routerInfo.getDestination();
 
     console.log(startId, stopId);
-    // create markers
-    startMarker
-        .setLngLat([...coords].find(coord => coord[2] == startId).slice(0, 2))
-        .addTo(map);
-
-    destinationMarker 
-        .setLngLat([...coords].find(coord => coord[2] == stopId).slice(0, 2))
-        .addTo(map);
 
     // clean the no route text
     noRoute.innerHTML = "";
@@ -628,12 +651,11 @@ function triggerRounting() {
 
                 let geojsonData = turf.featureCollection([feature]);
 
-                console.log(geojsonData);
                 shortestRoute = geojsonData;
                 map.getSource('route').setData(geojsonData);
+                map.fitBounds(turf.bbox(geojsonData), { padding:50})
 
                 // directions tabs
-                directionsTab.classList.remove('d-none');
                 let directions = getDirections(data);
                 updateDirectionsTab(directions);
 
@@ -671,15 +693,16 @@ function getDirections(data) {
     let directionObj = [];
     for (let i = 0; i < directionCoords.length; i++) {
         let direction = {};
-        if(i == 0) {
-            direction.from = getPointName(directionCoords[i][2]);
-        }  else if(i == coordsLength) {
+       
+        if(i == coordsLength) {
             direction.from = getPointName(directionCoords[i][2]);
         } else {
             direction.from = getPointName(directionCoords[i][2]);
-            direction.distance = getDistance(directionCoords[i], directionCoords[i-1]);
-            direction.bearing = getBearing(directionCoords[i], directionCoords[i-1])
-        }   
+            direction.distance = getDistance(directionCoords[i], directionCoords[i+1]);
+            direction.bearing = getBearing(directionCoords[i], directionCoords[i+1])
+        }
+        
+        direction.coordinates = directionCoords[i];
 
         directionObj.push(direction);
     }
@@ -719,17 +742,32 @@ function updateDirectionsTab(directions) {
      console.log(docFrag);
      
     directionCard.style.width = directions.length * 100 + "%";
+    let distance = 0;
  
     directions.forEach((direction, i) => {
         let listItem = document.createElement("li");
         
         listItem.setAttribute("data-key", direction.from);
+        distance = distance + (direction.distance ? parseInt(direction.distance) : 0);
 
         if(i == 0) {
-            listItem.innerHTML = "<h5><b>"+ direction.from +"</b></h5>"
+            listItem.innerHTML = "<span class='directions-icon'>"+
+                "<div class='marker-small start-marker'>S</div>"+
+            "</span>";
+
+            listItem.innerHTML += "<div class='list-direction'>"+ direction.from +"</div>";
+            listItem.innerHTML += "<div class='directions-step-distance'>"+ distance +" m</div>";
+            // listItem.classList.add('waypoint');
+
             directionCard.innerHTML += "<li class='list-group-item'>"+directions.from +"<strong>";
         } else if(i == directions.length -1) {
-            listItem.innerHTML = "<h5>You have a arrived at you destination: <b>"+ direction.from +"</b></small>"
+            listItem.innerHTML = "<span class='directions-icon'>"+
+                "<div class='marker-small destination-marker'>D</div>"+
+            "</span>";
+
+            listItem.innerHTML += "<div class='list-direction'>"+ direction.from +"</div>";
+
+            listItem.classList.add('waypoint');
             directionCard.innerHTML += "<li class='list-group-item'>"+ directions.from +"<strong>";
         } 
         else {
@@ -738,18 +776,48 @@ function updateDirectionsTab(directions) {
             console.log(angle);
 
             console.log(!Boolean(angle));
-            let turn = !Boolean(angle) ? "No Turn": angle == 0  ? "Head Straight" : angle < 180 ? 'Turn Left' : "Turn Right";
+            let turn = !Boolean(angle) ? "Head Straight": angle == 0  ? "Head Straight" : angle < 180 ? 'Turn Left' : "Turn Right";
+            let icon = !Boolean(angle) ? "arrow-up": angle == 0  ? "arrow-up" : angle < 180 ? 'arrow-left' : "arrow-right";
 
-            listItem.innerHTML = "<p>"+
-                "<small> "+ turn + " on  </small></p>"+
-                "<small><strong> "+ direction.distance +" m <strong></small>";
+            listItem.innerHTML = "<span class='directions-icon'>"+
+            "<i class='fa fa-"+ icon +"'></i>"+
+            "</span>";
+
+            listItem.innerHTML += "<div class='list-direction'>"+ turn +"</div>";
+            listItem.innerHTML += "<div class='directions-step-distance'>"+ distance +" m</div>";
             
-            listItem.setAttribute("class", "list-group-item");
             console.log("Card");
             
-            directionCard.innerHTML += "<li class='list-group-item'>"+ turn +"<strong> "+ direction.distance +" m <strong></li>"
+            directionCard.innerHTML += "<li class='direction-steps'>"+ turn +"<strong> "+ direction.distance +" m <strong></li>"
         }
 
+        listItem.setAttribute("data-lat", direction.coordinates[1]);
+        listItem.setAttribute("data-lng", direction.coordinates[0]);
+        listItem.classList.add('direction-steps');
+
+        // add event listener
+        listItem.addEventListener("mouseover", function(e) {
+            let lng = this.getAttribute('data-lng');
+            let lat = this.getAttribute('data-lat');
+
+            positionMarker.setLngLat([lng, lat]).addTo(map)
+            
+        });
+
+        listItem.addEventListener("mouseout", function(e) {
+           positionMarker.remove();            
+        });
+
+        listItem.addEventListener("click", function(e) {
+            let lng = this.getAttribute('data-lng');
+            let lat = this.getAttribute('data-lat');
+
+            map.flyTo({
+                center: [lng, lat],
+                zoom: 22
+            });
+            
+        });
         
         docFrag.append(listItem);
     });

@@ -10,6 +10,15 @@
 <script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
 <link rel="stylesheet" href="css/bootstrap.css">
 <style>
+    :root {
+        --main-color:#156504;
+        --red:#ff0000;
+        --gold:#CBD000;
+        --white:#fff;
+        --gray:#ddd;
+        --dark-gray:#525252;
+    }
+    
 	body { 
         margin: 0; 
         padding: 0; 
@@ -54,10 +63,10 @@
     .routing-section {
         top:0%;
         left:0%;
-        height: 15%;
+        height: auto;
         position: absolute;
         z-index: 2;
-        background-color: white;
+        background-color: var(--main-color);
         padding:1em 0.5em;
         box-shadow:2px 2px 0.4em #343433;
         width:100%;
@@ -67,8 +76,9 @@
         position: absolute;
         top: 100%;
         transition: all 0.3s ease-in-out;
-        background-color: wheat;
-        width: 95%;
+        background-color:white;
+        width: 100%;
+        left:0;
     }
 
     .list-group.slide-down {
@@ -107,9 +117,55 @@
         font-size: 1rem;
     }
 
+    .direction-steps {
+        position: relative;
+        color: rgba(255,255,255,.75);
+        cursor: pointer;
+        padding: 20px 20px 20px 40px;
+        font-size: 14px;
+        line-height: 18px;
+        font-weight: 300;
+        letter-spacing: 0.1em;
+    }
+
+    .direction-steps::after {
+        content: '';
+        position: absolute;
+        top: 45px;
+        bottom: -10px;
+        border-left: 2px dotted rgba(255,255,255,.2);
+        left: 20px;
+    }
+
+    .direction-steps.waypoint::after {
+        border:0px solid;
+    }
+
+    .directions-icon {
+        position: absolute;
+        left: 12px;
+        top: 20px;
+        margin: auto;
+    }
+
+    .directions-step-distance {
+        color: rgba(255,255,255,.5);
+        position: absolute;
+        padding: 5px 10px;
+        font-size: 12px;
+        left: 30px;
+        bottom: -10px;
+    }
+
     .input-group .form-control {
         /* border-right: 0px solid transparent; */
-        border-color:transparent transparent #ddd transparent
+        border-color:transparent transparent #ddd transparent;
+        background-color:transparent;
+        color:white;
+    }
+
+    .start, .destination {
+        color:white;
     }
 
     .input-group .form-control:focus {
@@ -137,7 +193,7 @@
     .steps {
         padding: 0.5em;
         height: 67vh;
-        background-color: wheat;
+        background-color: var(--dark-gray);
         overflow: auto;
     }
 
@@ -202,29 +258,59 @@
         float: left;
     }
 
-    .start-marker {
+    .direction-marker {
         border-radius: 50%;
-        width:20px;
-        height: 20px;
-        background-color: brown;
-        color:white;
+        width:30px;
+        height: 30px;
+        text-align: center;
+        align-items: center;
+        display: flex;
+        font-size: 1.3em;
+        justify-content: center;
         font-weight:700;
-        text-align:center;
+        color:white;
+    }
+
+    .marker-small {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        align-items: center;
+        display: flex;
+        font-size: 1em;
+        font-weight: 600;
+        padding: 0.5em;
+        justify-content: center;
+    }
+
+    .start-marker {
+        background-color: brown;
+    }
+
+    .route-marker {
+        background-color: var(--main-color);
+        width:12px;
+        height: 12px;
+        border:2px solid var(--white);
+        border-radius: 50%;
     }
 
     .destination-marker {
-        border-radius: 50%;
-        width:20px;
-        height: 20px;
         background-color: blue;
-        color:white;
-        font-weight:700;
-        text-align:center;
     }
+
     .close {
         position: absolute;
         top:2%;
-        right:4%;
+        right:1%;
+        font-size: 1rem;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 2%;
+        right: 1%;
+        font-size: 1rem;
     }
 
     /*  */
@@ -252,17 +338,22 @@
             width:35%;
         }
 
-        .routing-section, .search-section{
-            width: 30%;
+        .routing-section {
+            height: 15%;
+            padding:1em 1.5em;
         }
+        .routing-section, .search-section{
+            width: 400px;
+        }
+
         #direction-tab {
             top: 14%;
-            width:30%;
+            width:400px;
             overflow: auto;
         }
 
         .steps {
-            height: 69vh;
+            height: 73.5vh;
         }
 
         .fixed-nav {
@@ -313,7 +404,7 @@
         </div>        
     </div>
 
-    <div class="search-section d-none" id="search-section">
+    <div class="search-section" id="search-section">
         <div class="input-group input-group-sm mb-1">
             <input type="text" class="form-control form-control-sm" id="search"  placeholder="Search... " autofocus>
             <div class="input-group-append bg-none">
@@ -328,7 +419,7 @@
         </div>
     </div>
 
-    <div class="routing-section" id="routing-section">
+    <div class="routing-section d-none" id="routing-section">
         <div class="input-group input-group-sm mb-2">
             <input type="text" class="form-control form-control-sm" id="start"  placeholder="Start ...." autofocus>
             <div class="input-group-append bg-none">
@@ -351,6 +442,10 @@
         <ul class="list-group list-group-sm" id="list-group">
 
         </ul>
+
+        <span class="close-btn text-white" id="toggle-route-tab">
+            <i class="fa fa-times"></i>
+         </span>
     </div>
 
     <div class="bg-light text-dark mt-1 d-none" id="direction-tab">   
