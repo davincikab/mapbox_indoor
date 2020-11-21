@@ -2,10 +2,10 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYmVubnl0cm92YXRvIiwiYSI6ImNrZDcwdTVwbTE4amEye
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
-    center: [36.962665288208996, -0.399305745003987],
-    zoom: 19.99,
+    center: [36.962807572254974,-0.39912086768855204],
+    zoom: 19.4,
     maxZoom:25,
-    pitch: 40,
+    pitch:0,
     bearing: 21,
     antialias: true,
 });
@@ -535,7 +535,7 @@ function handleClickEvent(value, obj) {
 
         // update floor
         floorToggler(feature.properties.level);
-        
+
 
         startMarker
             .setLngLat(coordinates)
