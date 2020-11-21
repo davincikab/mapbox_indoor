@@ -275,8 +275,12 @@ var routingTab = document.getElementById("routing-section");
 var spanClearDestination = document.getElementsByClassName('destination')[0];
 var spanClearStart = document.getElementsByClassName('start')[0];
 
+var searchControl = document.getElementById("search");
+var searchResultDiv = document.getElementById('list-group-search');
+
 var startControl = document.getElementById("start")
 var destinationControl = document.getElementById("destination");
+
 var noRoute = document.getElementById("no-route");
 var directionsTab = document.getElementById("direction-tab");
 var stepsTab = document.getElementById("steps");
@@ -418,7 +422,16 @@ toggleRouteTab.addEventListener("click", function(e) {
 
 });
 
+// search room, stairway etc
+searchControl.addEventListener("input", function(e) {
+    // spanClearStart.innerHTML = '<i class="fa fa-times"></i>';
 
+    activeTab = "";
+    let features = searchAddress(e.target.value);
+    updateSearchResultContainer(features);
+});
+
+// start control
 startControl.addEventListener("focus", function(e) {
     activeTab = "start";
     resultContainer.innerHTML = "";
@@ -458,7 +471,9 @@ destinationControl.addEventListener("input", function(e) {
 });
 
 function searchAddress(value) {
-    let data = JSON.parse(JSON.stringify(roomPoints));
+    let data = activeTab ? JSON.parse(JSON.stringify(roomPoints)) : JSON.parse(JSON.stringify(points));
+    console.log(data);
+
     data.features = data.features.filter(feature =>{
         if(
             feature.properties.Name.toLowerCase().includes(
@@ -482,28 +497,62 @@ function updateSearchResultContainer(features){
         listGroupItem.setAttribute("class", "list-group-item");
         listGroupItem.setAttribute("id", feature.properties.fid);
 
-        listGroupItem.innerHTML = feature.properties.Name +"<small id='"+feature.properties.fid+"'>, Floor "+feature.properties.level+", "+feature.properties.fid+"</small>"
+        listGroupItem.innerHTML = feature.properties.Name;
+        listGroupItem.innerHTML += "<div class='text-small'>, Floor "+feature.properties.level+"</div>";
         listGroupItem.addEventListener("click", function(e) {
-            handleClickEvent(e);
+            // console.log();
+            handleClickEvent(this.getAttribute('id'), this);
             // e.stopPropagation();
         });
 
         listGroupFragment.append(listGroupItem);
     });
 
-    resultContainer.innerHTML = "";
-    resultContainer.append(listGroupFragment);
+    if(activeTab != "") {
+        resultContainer.innerHTML = "";
+        resultContainer.append(listGroupFragment);
+
+        return;
+    }
+
+    
+    searchResultDiv.innerHTML = "";
+    searchResultDiv.append(listGroupFragment);
+    
 }
 
 
-function handleClickEvent(e) {
-    let target = e.target;
-    let value = target.id;
+function handleClickEvent(value, obj) {
+    console.log(value);
+    if(activeTab == "") {
+        searchControl.value = obj.innerText;
 
-    console.log(target);
+        let featureId = obj.getAttribute('id');
+        let feature = [...points.features].find(feature => feature.properties.fid == featureId);
+        let coordinates = feature.geometry.coordinates; 
+
+        console.log(feature);
+
+        // update floor
+        floorToggler(feature.properties.level);
+        
+
+        startMarker
+            .setLngLat(coordinates)
+            .addTo(map);
+
+        map.flyTo({
+            center:coordinates,
+            zoom:21
+        });
+
+        searchResultDiv.innerHTML = "";
+        return;
+    }
+
     if(activeTab == "start") {
         routerInfo.setStart(value);
-        startControl.value = target.innerText;
+        startControl.value = obj.innerText;
 
         destinationControl.value !== '' ? triggerRounting() : "";
 
@@ -522,7 +571,7 @@ function handleClickEvent(e) {
     } else {
 
         routerInfo.setDestination(value);
-        destinationControl.value = target.innerText;
+        destinationControl.value = obj.innerText;
 
         startControl.value !== '' ? triggerRounting() : "";
 

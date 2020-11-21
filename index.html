@@ -47,6 +47,9 @@
         background-color: white;
     }
 
+    #search {
+        color:var(--dark-gray);
+    }
 
     .floor-section {
         top:2%;
@@ -85,9 +88,15 @@
         top:90%;
     }
 
-    .list-group-sm .list-group-item {
-        padding: .25rem 1.25rem;
-        background-color: #fff;
+    .list-group-item {
+        font-size: 0.8em;
+        position: relative;
+        display: flex;
+    }
+
+    .list-group-item:hover {
+        color:var(--white);
+        background-color:var(--main-color);
     }
 
     .list-group-item p {
@@ -417,6 +426,9 @@
         <div class="d-flex ml-2 align-center" id="toggle-direction">
            <img src="images/directions.png" alt="" class="" height="20" >
         </div>
+
+        <ul class="list-group list-group-sm" id="list-group-search">
+        </ul>
     </div>
 
     <div class="routing-section d-none" id="routing-section">
