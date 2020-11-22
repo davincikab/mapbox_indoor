@@ -959,5 +959,4 @@ function updateDirectionsTab(directions) {
 // tiles color: #FEFAEE, #FEFBEC
 
 
-// Load more points
-// change the 
+// TODO: path preview, audio, sort 3d view bug
