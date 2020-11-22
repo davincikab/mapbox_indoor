@@ -10,6 +10,15 @@ var map = new mapboxgl.Map({
     antialias: true,
 });
 
+// floor layers
+var layers = {
+    '0':'ground_2d',
+    '1':'floor-one_2d',
+    '2':'floor-two_2d'
+};
+
+var activeMode = "2D";
+
 // route marker
 var routeElement = document.createElement('div');
 routeElement.classList.add('route-marker');
@@ -35,7 +44,7 @@ map.on('load', function() {
     });
 
     map.addLayer({
-        'id': 'room-extrusion',
+        'id': 'ground_3d',
         'type': 'fill-extrusion',
         'source': 'floorplan',
         'paint': {
@@ -63,14 +72,14 @@ map.on('load', function() {
         }
     });
 
-
+    // First Floor
     map.addSource('floorone', {
         'type': 'geojson',
         'data':'first_floor.geojson'
     });
 
     map.addLayer({
-        'id': 'floor-one-extrusion',
+        'id': 'floor-one_3d',
         'type': 'fill-extrusion',
         'source': 'floorone',
         'paint': {
@@ -85,7 +94,7 @@ map.on('load', function() {
         }
     });
 
-    // 2d second
+    // 2d first floor
     map.addLayer({
         'id':"floor-one_2d",
         'source': 'floorone',
@@ -98,7 +107,7 @@ map.on('load', function() {
         }
     });
 
-    // second floor
+    // === second floor =====
     map.addSource('floortwo', {
         'type': 'geojson',
         'data':
@@ -106,7 +115,7 @@ map.on('load', function() {
     });
 
     map.addLayer({
-        'id': 'floor-two-extrusion',
+        'id': 'floor-two_3d',
         'type': 'fill-extrusion',
         'source': 'floortwo',
         'paint': {
@@ -114,7 +123,6 @@ map.on('load', function() {
             'fill-extrusion-height': ['get', 'height'],
             'fill-extrusion-base': ['get', 'base_heigh'],
             'fill-extrusion-opacity': 1,
-            'fill-extrusion-pattern':"blue"
         },
         'layout' :{
             'visibility':'none'
@@ -133,29 +141,8 @@ map.on('load', function() {
             'visibility':'none'
         }
     });
-    
-    map.addSource('pointstwo', {
-        type: 'geojson',
-        data: 'points_buffer.geojson'
-    });
 
-    map.addLayer({
-        'id': 'point-extrusion',
-        'type': 'fill-extrusion',
-        'filter':['==', ['get', 'level'], 0],
-        'source': 'pointstwo',
-        'paint': {
-            'fill-extrusion-color': ['get', 'color'],
-            'fill-extrusion-height': ['get', 'height'],
-            'fill-extrusion-base': ['get', 'base_heigh'],
-            'fill-extrusion-opacity': 1,
-        },
-        'layout' :{
-            'visibility':'none'
-        }
-    });
-
-    // load the points
+    // Load the points
     map.addSource('points', {
         type:'geojson',
         data:points
@@ -219,8 +206,93 @@ function loadImage(images) {
     });
 }
 
+// 3d toggler
+function toggle2d(mode) {
+    let active = layers[activeFloor];
+
+    if(mode == "3D") {
+        activeMode = "3D";
+        map.setLayoutProperty(active, 'visibility', 'none');
+
+        map.easeTo({
+            pitch:60,
+            duration:1000
+        });
+
+        // update
+        let layer3d = active.split("_")[0] + "_3d";
+        console.log(layer3d);
+        map.setLayoutProperty(layer3d, 'visibility', 'visible');
+    } else {
+        activeMode = "2D";
+        map.easeTo({
+            pitch:0,
+            duration:1000
+        });
+
+        // hide the 3d layers
+        Object.values(layers).forEach(layer => {
+            let layer3d = layer.split("_")[0] + "_3d";
+            map.setLayoutProperty(layer3d, 'visibility', 'none');
+        });
+
+        
+        // display the active 3d layer
+        map.setLayoutProperty(active, 'visibility', 'visible');
+    }
+
+}
+
+class DimensionLayerControl {
+    onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'mapboxgl-ctrl';
+
+        var divContainer = document.createElement('select');
+        divContainer.classList.add('dimension-toggler');
+
+        let modes = ["2D", "3D"];
+        modes.forEach(mode => {
+            let div = document.createElement('option');
+            div.setAttribute("value", mode);
+            div.innerHTML = mode;
+
+            divContainer.append(div);
+        });
+
+        divContainer.addEventListener("change", function(e) {
+            // toggle 
+            toggle2d(e.target.value);
+        });
+
+        this._container.append(divContainer);
+
+
+        return this._container;
+    }
+         
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
+}
+
+map.addControl(new DimensionLayerControl(), 'top-right');
+
+
 // create a mapbox control 
 class IndoorLayerControl {
+    static setActiveFloor(id) {
+        let floorControls = document.querySelectorAll('.floor-control');
+        floorControls.forEach(floorControl => {
+            floorControl.classList.remove('floor-active');
+        });
+
+        let activeFloor = document.getElementById(id);
+        activeFloor.classList.add('floor-active');
+    }
+
     onAdd(map) {
         this._map = map;
         this._container = document.createElement('div');
@@ -230,7 +302,8 @@ class IndoorLayerControl {
 
         floors.forEach(floor => {
             let div = document.createElement('div');
-            div.classList.add('floor-control')
+            div.setAttribute('id', 'floor-'+floor);
+            div.classList.add('floor-control');
             
             if(floor == 0) {
                 div.classList.add('floor-active');
@@ -238,16 +311,17 @@ class IndoorLayerControl {
             div.innerHTML = floor;
 
             div.addEventListener('click', function(e) {
-                let floorControls = document.querySelectorAll('.floor-control');
-                floorControls.forEach(floorControl => {
-                    floorControl.classList.remove('floor-active');
-                });
+                // let floorControls = document.querySelectorAll('.floor-control');
+                // floorControls.forEach(floorControl => {
+                //     floorControl.classList.remove('floor-active');
+                // });
 
                 // update the floor plans
                 let value = this.innerText;
+                IndoorLayerControl.setActiveFloor('floor-'+value);
                 floorToggler(value);
 
-                this.classList.add('floor-active');
+                // this.classList.add('floor-active');
             });
 
             this._container.appendChild(div);
@@ -262,7 +336,8 @@ class IndoorLayerControl {
     }
 }
 
-map.addControl(new IndoorLayerControl(), 'bottom-right');
+var indoorLayerControl = new IndoorLayerControl();
+map.addControl(indoorLayerControl, 'bottom-right');
 
 var directionCard = document.getElementById("direction-card");
 var activeFloor = "0";
@@ -307,29 +382,31 @@ toggleFloorButtons.forEach(toggleFloorButton => {
 });
 
 function floorToggler(value) {
-    // get the values
-    let layers = {
-        '0':'ground_2d',
-        '1':'floor-one_2d',
-        '2':'floor-two_2d'
-    };
+    // remove the route
+    resetRouter();   
 
+    // update active floor
     activeFloor = value;
     let activeLayerId = layers[value];
 
-    console.log("Active: "+ activeLayerId);
-    // set visibility to none
-    for (const key in layers) {
-        let id = layers[key];
-        console.log( map.getLayer(id));
+    // update 
+    if(activeMode == "3D") {
+        toggle2d("3D");
+    } else {
 
-        if(id == activeLayerId) {
-             // set visibility to visible
-            map.setLayoutProperty(activeLayerId,'visibility', 'visible');
-        } else {
-            map.setLayoutProperty(id, 'visibility', 'none');
+        // set visibility to none
+        for (const key in layers) {
+            let id = layers[key];
+            console.log( map.getLayer(id));
+
+            if(id == activeLayerId) {
+                // set visibility to visible
+                map.setLayoutProperty(activeLayerId,'visibility', 'visible');
+            } else {
+                map.setLayoutProperty(id, 'visibility', 'none');
+            }
+            
         }
-        
     }
 
 
@@ -416,9 +493,7 @@ toggleRouteTab.addEventListener("click", function(e) {
     routingTab.classList.add('d-none');
     directionsTab.classList.add('d-none');
 
-    startMarker.remove();
-    destinationMarker.remove();
-    map.getSource('route').setData({'type':'FeatureCollection', 'features':[]});
+    resetRouter();
 
 });
 
@@ -532,9 +607,10 @@ function handleClickEvent(value, obj) {
         let coordinates = feature.geometry.coordinates; 
 
         console.log(feature);
-
+        let level = feature.properties.level;
+        IndoorLayerControl.setActiveFloor('floor-'+level);
         // update floor
-        floorToggler(feature.properties.level);
+        floorToggler(level);
 
 
         startMarker
