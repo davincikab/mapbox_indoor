@@ -359,6 +359,7 @@ map.addControl(indoorLayerControl, 'bottom-right');
 var carouselContainer = document.getElementById('carousel-container');
 var directionCard = document.getElementById("direction-card");
 var toggleCarouselContainer = document.getElementById("preview-steps");
+var closeCarousel = document.getElementById("close-btn");
 
 var activeFloor = "0";
 var resultContainer = document.getElementById("list-group");
@@ -696,10 +697,14 @@ function resetRouter() {
     );
 
     stepsTab.innerHTML = "";
-    summaryInfo.innerHTML = "<p class='text-danger'>NO ROUTE FOUND</p>";
+    summaryInfo.innerHTML = "";
     noRoute.innerHTML = "";
     startControl.value = "";
     destinationControl.value = "";
+
+    if(positionMarker) {
+        positionMarker.remove();
+    }
 }
 
 // load results
@@ -826,7 +831,8 @@ function triggerRounting() {
                 // event listener
                 toggleCarousel();
             } else {
-                noRoute.innerHTML = data;
+                // noRoute.innerHTML = data;
+                summaryInfo.innerHTML = "<p class='text-danger'> NO ROUTE FOUND</p>";
             }
            
         })
@@ -838,12 +844,19 @@ function triggerRounting() {
 function toggleCarousel() {
     // get the toggleCarousel
     toggleCarouselContainer = document.getElementById("preview-steps");
+    closeCarousel.addEventListener('click', function(e) {
+        hideOrShowCarousel();
+    });
 
     toggleCarouselContainer.addEventListener('click', function(e) {
+        hideOrShowCarousel();
+    });
+
+    function hideOrShowCarousel() {
         carouselContainer.classList.toggle("d-none");
 
         if(carouselContainer.classList.contains("d-none")) {
-            this.innerText = "PREVIEW";
+            toggleCarouselContainer.innerText = "PREVIEW";
             speechSynth.cancel();
 
             clearInterval(speechInterval);
@@ -851,10 +864,10 @@ function toggleCarousel() {
         }
 
         if(!carouselContainer.classList.contains("d-none")) {
-            this.innerText = "CANCEL"
+            toggleCarouselContainer.innerText = "CANCEL"
             playRoute();
         }
-    });
+    }
 }
 
 function getDirections(data) {
