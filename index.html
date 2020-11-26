@@ -96,7 +96,7 @@
 
     .list-group-item:hover {
         color:var(--white);
-        background-color:var(--main-color);
+        background-color:var(--gold);
     }
 
     .list-group-item p {
@@ -195,6 +195,10 @@
         color:#929292ee;
     }
 
+    #route-summary div {
+        width: 70%;
+    }
+
     #route-summary h5, p{
         margin:0;
     }
@@ -257,14 +261,24 @@
         bottom: 0%;
     }
 
-    #direction-card  .list-group-item {
-        /* width: 100%;
-        height: 15vh; */
-        width: 90%;
+    #direction-card  li {
+        list-style: none;
+        position: relative;
+        width: 91% !important;
         height: 20vw;
-        margin: 0 5%;
-        overflow: hidden;
+        margin: 1px 0.5%;
+        display: table;
+        justify-content: space-between;
+        color:var(--dark-gray) !important;
         float: left;
+        padding: 0.5em 0.6em;
+        background-color:var(--white);
+        box-shadow: 2px 2px 0.2em var(--gray);
+    }
+
+    #direction-card  li span,  #direction-card  li .directions-step-distance {
+        position: initial;
+        color:var(--dark-gray);
     }
 
     .direction-marker {
@@ -367,7 +381,7 @@
         #direction-tab {
             top: 14%;
             width:400px;
-            overflow: auto;
+            /* overflow: auto; */
         }
 
         .steps {
@@ -379,7 +393,7 @@
         }
 
         .carousel-container {
-            left:30%;
+            left: 400px;
             bottom: 0;
             right: 0;
             width: auto;
@@ -392,6 +406,7 @@
         
         #direction-card .list-group-item {
             height: 6vw;
+            /* width: 70%; */
         }
 
         .carousel-container .list-group {
@@ -457,7 +472,7 @@
             </div>
         </div>
 
-        <button class="btn btn-sm btn-primary mt-2 d-none" id="route">Route</button><br>
+        <!-- <button class="btn btn-sm btn-primary mt-2 d-none" id="route">Route</button><br> -->
         <small class="text-danger" id="no-route"></small>
        
         <ul class="list-group list-group-sm" id="list-group">
@@ -470,11 +485,10 @@
     </div>
 
     <div class="bg-light text-dark mt-1 d-none" id="direction-tab">   
-        <div id="route-summary" class="py-2 px-2">
+        <div id="route-summary" class="py-2 px-2 d-flex">
 
         </div>
         <div id="steps" class="steps">
-
         </div>
     </div>
 
@@ -487,12 +501,12 @@
         </div>
     </div>
 
-    <div class="carousel-container d-none">
+    <div class="carousel-container d-none" id="carousel-container">
         <span class="close" id="close-btn">&times;</span>
         <div class="direction-card" id="direction-card">
-            <li class="list-group-item">Cras justo odio</li>
+            <!-- <li class="list-group-item">Cras justo odio</li>
             <li class="list-group-item">Dapibus ac facilisis in</li>
-            <li class="list-group-item">Mappa</li>
+            <li class="list-group-item">Mappa</li> -->
         </div>
     
         <div class="control-section text-center">

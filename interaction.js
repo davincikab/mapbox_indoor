@@ -13,15 +13,27 @@ stepsToggler.addEventListener("click", function(e) {
 var slidePrevButton = document.querySelector(".carousel-control-prev");
 var slideNextButton = document.querySelector(".carousel-control-next");
 
-var listGroupCards = document.querySelectorAll("#direction-card .list-group-item");
+var listGroupCards = document.querySelectorAll("#direction-card li");
 
 var currentDisplacement = 0;
 var listGroupCardsLength = listGroupCards.length -1;
 var direction = "right";
+var speachInterval;
 
-setInterval(function(e) {
-    // slideContent();
-}, 3000);
+function playRoute() {
+    currentDisplacement = 100;
+    slideContent();
+
+    speechInterval = setInterval(function(e) {
+        if(currentDisplacement == (-100 * listGroupCardsLength)) {
+            clearInterval(speechInterval);
+        } else{
+            slideContent();
+        }
+
+    }, 5000);
+}
+
 
 slideNextButton.addEventListener("click", function(e) {
     e.preventDefault();
@@ -44,20 +56,47 @@ function slideContent() {
     } else {
         currentDisplacement = currentDisplacement + 100;
         if(currentDisplacement > 0) {
-            currentDisplacement = -100;
+            currentDisplacement = 100;
             direction = "right";
         }
     }
     
+    // get the active 
+    let activeItemIndex = currentDisplacement / -100;
+    let activeItem = (listGroupCards[activeItemIndex]);
 
     console.log(currentDisplacement);
-    directionCard.style.left = currentDisplacement + "%"
+    directionCard.style.left = currentDisplacement + "%";
+
+    // update speech text
+    let element = activeItem.querySelector(".list-direction");
+    let distance = activeItem.querySelector(".directions-step-distance");
+
+    let distanceText = distance ? distance.innerText.replace("m", "metres") : "";
+
+    if(activeItemIndex == 0) {
+        speech.text = "From " + element.innerText + " walk " + distanceText;
+    } else if( activeItemIndex == listGroupCardsLength) {
+        speech.text = 'You have arrived at your destination: ' + element.innerText;
+
+    } else {
+        speech.text = element.innerText + "and Walk " + distanceText;
+    }
+    
+    window.speechSynthesis.speak(speech);
+
+    // zoom to the point
+    let lng = activeItem.getAttribute('data-lng');
+    let lat = activeItem.getAttribute('data-lat');
+
+    if(lng && lat) {
+        map.flyTo({
+            center: [lng, lat],
+            zoom: 22
+        });
+
+        positionMarker.setLngLat([lng, lat]).addTo(map);
+    }
+    
+            
 }
-
-
-// 36.962970301764045, -0.399318876687972;
-// 36.96300300356657, -0.399213763245354;
-// 36.963009574144, -0.398987878934506;
-// 36.962979488212724, -0.398958981768112;
-// 36.96284748381025, -0.398952233960397;
-// 36.96279032589487, -0.398918295380938

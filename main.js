@@ -10,6 +10,15 @@ var map = new mapboxgl.Map({
     antialias: true,
 });
 
+// web speech API
+var speech = new SpeechSynthesisUtterance();
+speech.lang = "en-US";
+speech.text = "Home Coming party";
+speech.volume = 1.2;
+speech.rate = 0.8;
+speech.pitch = 1; 
+
+
 // floor layers
 var layers = {
     '0':'ground_2d',
@@ -219,6 +228,12 @@ function toggle2d(mode) {
             duration:1000
         });
 
+         // hide the 3d layers
+         Object.values(layers).forEach(layer => {
+            let layer3d = layer.split("_")[0] + "_3d";
+            map.setLayoutProperty(layer3d, 'visibility', 'none');
+        });
+
         // update
         let layer3d = active.split("_")[0] + "_3d";
         console.log(layer3d);
@@ -339,7 +354,10 @@ class IndoorLayerControl {
 var indoorLayerControl = new IndoorLayerControl();
 map.addControl(indoorLayerControl, 'bottom-right');
 
+var carouselContainer = document.getElementById('carousel-container');
 var directionCard = document.getElementById("direction-card");
+var toggleCarouselContainer = document.getElementById("preview-steps");
+
 var activeFloor = "0";
 var resultContainer = document.getElementById("list-group");
 var toggleDirectionTab = document.getElementById("toggle-direction");
@@ -361,7 +379,6 @@ var directionsTab = document.getElementById("direction-tab");
 var stepsTab = document.getElementById("steps");
 var summaryInfo = document.getElementById("route-summary")
 var activeTab = "";
-var routingButton = document.getElementById("route");
 
 
 var obstacles = JSON.parse(JSON.stringify(polygon));
@@ -446,14 +463,6 @@ function updateActiveLink(value) {
 
 }
 
-routingButton.addEventListener("click", function(e) {
-    if(routerInfo.start == "" || routerInfo.destination == "") {
-        noRoute.innerHTML = "Select a start and destination"
-    } else {
-        triggerRounting(activeFloor);
-    }
-});
-
 spanClearStart.addEventListener("click", function(e) {
     startControl.value = "";
     
@@ -519,6 +528,11 @@ startControl.addEventListener("focus", function(e) {
 startControl.addEventListener("input", function(e) {
     spanClearStart.innerHTML = '<i class="fa fa-times"></i>';
 
+    // toggle 3d mode
+    if(activeMode == "3D") {
+        toggle2d("2D");  
+    }
+
     let features = searchAddress(e.target.value);
     updateSearchResultContainer(features);
 });
@@ -536,6 +550,11 @@ destinationControl.addEventListener("focus", function(e) {
 
 destinationControl.addEventListener("input", function(e) {
     spanClearDestination.innerHTML = '<i class="fa fa-times"></i>';
+
+    // toggle 3d mode
+    if(activeMode == "3D") {
+        toggle2d("2D");  
+    }
 
     if(!this.value) {
         resultContainer.innerHTML = "";
@@ -799,7 +818,11 @@ function triggerRounting() {
                 }
 
                 summaryInfo.innerHTML = "";
-                summaryInfo.innerHTML ="<h5><span class='text-success'>"+ time +"   </span>(" + Math.ceil(distance) +" m)</h5><p>Via Main Corridor</p>" ;
+                summaryInfo.innerHTML ="<div><h5><span class='text-success'>"+ time +"   </span>(" + Math.ceil(distance) +" m)</h5><p>Via Main Corridor</p></div>" ;
+                summaryInfo.innerHTML += '<button class="btn" id="preview-steps">PREVIEW</button>';
+
+                // event listener
+                toggleCarousel();
             } else {
                 noRoute.innerHTML = data;
             }
@@ -808,6 +831,19 @@ function triggerRounting() {
         .catch(error => {
             console.error(error);
         });
+}
+
+function toggleCarousel() {
+    // get the toggleCarousel
+    toggleCarouselContainer = document.getElementById("preview-steps");
+
+    toggleCarouselContainer.addEventListener('click', function(e) {
+        carouselContainer.classList.toggle("d-none");
+
+        if(!carouselContainer.classList.contains("d-none")) {
+            playRoute();
+        }
+    });
 }
 
 function getDirections(data) {
@@ -873,7 +909,7 @@ function updateDirectionsTab(directions) {
         let listItem = document.createElement("li");
         
         listItem.setAttribute("data-key", direction.from);
-        distance = distance + (direction.distance ? parseInt(direction.distance) : 0);
+        distance = direction.distance ? parseInt(direction.distance) : 0;
 
         if(i == 0) {
             listItem.innerHTML = "<span class='directions-icon'>"+
@@ -884,7 +920,7 @@ function updateDirectionsTab(directions) {
             listItem.innerHTML += "<div class='directions-step-distance'>"+ distance +" m</div>";
             // listItem.classList.add('waypoint');
 
-            directionCard.innerHTML += "<li class='list-group-item'>"+directions.from +"<strong>";
+            // directionCard.innerHTML += listItem.innerHTML;
         } else if(i == directions.length -1) {
             listItem.innerHTML = "<span class='directions-icon'>"+
                 "<div class='marker-small destination-marker'>D</div>"+
@@ -893,7 +929,7 @@ function updateDirectionsTab(directions) {
             listItem.innerHTML += "<div class='list-direction'>"+ direction.from +"</div>";
 
             listItem.classList.add('waypoint');
-            directionCard.innerHTML += "<li class='list-group-item'>"+ directions.from +"<strong>";
+            // directionCard.innerHTML += listItem.innerHTML;
         } 
         else {
             let angle = directions[i].bearing - directions[i-1].bearing;
@@ -913,12 +949,15 @@ function updateDirectionsTab(directions) {
             
             console.log("Card");
             
-            directionCard.innerHTML += "<li class='direction-steps'>"+ turn +"<strong> "+ direction.distance +" m <strong></li>"
+          
         }
 
         listItem.setAttribute("data-lat", direction.coordinates[1]);
         listItem.setAttribute("data-lng", direction.coordinates[0]);
         listItem.classList.add('direction-steps');
+
+        directionCard.innerHTML +=  listItem.outerHTML;
+        // directionCard.append(listItem);
 
         // add event listener
         listItem.addEventListener("mouseover", function(e) {
@@ -950,7 +989,10 @@ function updateDirectionsTab(directions) {
     stepsTab.innerHTML = "";
     stepsTab.append(docFrag);
 
-    listGroupCards = document.querySelectorAll("#direction-card .list-group-item");
+    // directionCard.innerHTML = "";
+    // directionCard.append(docFrag);
+
+    listGroupCards = document.querySelectorAll("#direction-card li");
     listGroupCardsLength = listGroupCards.length - 1;
    
 }
@@ -959,4 +1001,4 @@ function updateDirectionsTab(directions) {
 // tiles color: #FEFAEE, #FEFBEC
 
 
-// TODO: path preview, audio, sort 3d view bug
+// TODO: path preview, audio,
