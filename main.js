@@ -18,6 +18,8 @@ speech.volume = 1.2;
 speech.rate = 0.8;
 speech.pitch = 1; 
 
+var speechSynth = window.speechSynthesis;
+
 
 // floor layers
 var layers = {
@@ -840,7 +842,16 @@ function toggleCarousel() {
     toggleCarouselContainer.addEventListener('click', function(e) {
         carouselContainer.classList.toggle("d-none");
 
+        if(carouselContainer.classList.contains("d-none")) {
+            this.innerText = "PREVIEW";
+            speechSynth.cancel();
+
+            clearInterval(speechInterval);
+            return;
+        }
+
         if(!carouselContainer.classList.contains("d-none")) {
+            this.innerText = "CANCEL"
             playRoute();
         }
     });

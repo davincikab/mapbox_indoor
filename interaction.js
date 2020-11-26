@@ -18,9 +18,10 @@ var listGroupCards = document.querySelectorAll("#direction-card li");
 var currentDisplacement = 0;
 var listGroupCardsLength = listGroupCards.length -1;
 var direction = "right";
-var speachInterval;
+var speechInterval;
 
 function playRoute() {
+    direction = 'right';
     currentDisplacement = 100;
     slideContent();
 
@@ -36,13 +37,19 @@ function playRoute() {
 
 
 slideNextButton.addEventListener("click", function(e) {
+    clearInterval(speechInterval);
+
+    direction = 'right';
     e.preventDefault();
     slideContent();
     
 });
 
 slidePrevButton.addEventListener("click", function(e) {
+    clearInterval(speechInterval);
     e.preventDefault();
+
+    direction = 'left';
     slideContent();
 });
 
@@ -50,14 +57,14 @@ function slideContent() {
     if(direction == "right") {
         currentDisplacement = currentDisplacement - 100;
         if(-100 * listGroupCardsLength > currentDisplacement) {
-            currentDisplacement = -100 * listGroupCardsLength + 100;
-            direction = "left"
+            currentDisplacement = 0;
+            // direction = "right"
         }
     } else {
         currentDisplacement = currentDisplacement + 100;
         if(currentDisplacement > 0) {
-            currentDisplacement = 100;
-            direction = "right";
+            currentDisplacement = -100 * listGroupCardsLength + 100;
+            // direction = "right";
         }
     }
     
@@ -66,6 +73,7 @@ function slideContent() {
     let activeItem = (listGroupCards[activeItemIndex]);
 
     console.log(currentDisplacement);
+    console.log(direction);
     directionCard.style.left = currentDisplacement + "%";
 
     // update speech text
@@ -83,7 +91,7 @@ function slideContent() {
         speech.text = element.innerText + "and Walk " + distanceText;
     }
     
-    window.speechSynthesis.speak(speech);
+    speechSynth.speak(speech);
 
     // zoom to the point
     let lng = activeItem.getAttribute('data-lng');
