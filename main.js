@@ -44,6 +44,41 @@ var dummyGeojson = {
     "feature":[]
 };
 
+
+// add navigation control
+const geolocateControl = new mapboxgl.GeolocateControl({
+    showAccuracyCircle: false
+});
+
+map.addControl(geolocateControl);
+
+
+// geolocate events
+geolocateControl.on("geolocate", function(e) {
+    console.log(e);
+
+    // update start point
+    let {latitude, longitude} = e.coords;
+    directions.setOrigin([longitude, latitude]);
+
+});
+
+geolocateControl.on("error", function(e) {
+    console.error(e);
+});
+
+
+// Direction control
+var directions = new MapboxDirections({
+    accessToken: mapboxgl.accessToken,
+    unit: 'metric',
+    profile: 'mapbox/driving'
+});
+
+// add to your mapboxgl map
+map.addControl(directions);
+
+// map load event
 map.on('load', function() {
     console.time("Loading Map");
     loadImage(images);
@@ -832,7 +867,7 @@ function triggerRounting() {
                 toggleCarousel();
             } else {
                 // noRoute.innerHTML = data;
-                summaryInfo.innerHTML = "<p class='text-danger'> NO ROUTE FOUND</p>";
+                summaryInfo.innerHTMLs = "<p class='text-danger'> NO ROUTE FOUND</p>";
             }
            
         })
@@ -936,7 +971,7 @@ function updateDirectionsTab(directions) {
         distance = direction.distance ? parseInt(direction.distance) : 0;
 
         if(i == 0) {
-            listItem.innerHTML = "<span class='directions-icon'>"+
+            listItem.innerHTML = "<span class='icon-directions'>"+
                 "<div class='marker-small start-marker'>S</div>"+
             "</span>";
 
@@ -946,7 +981,7 @@ function updateDirectionsTab(directions) {
 
             // directionCard.innerHTML += listItem.innerHTML;
         } else if(i == directions.length -1) {
-            listItem.innerHTML = "<span class='directions-icon'>"+
+            listItem.innerHTML = "<span class='icon-directions'>"+
                 "<div class='marker-small destination-marker'>D</div>"+
             "</span>";
 
@@ -964,7 +999,7 @@ function updateDirectionsTab(directions) {
             let turn = !Boolean(angle) ? "Head Straight": angle == 0  ? "Head Straight" : angle < 180 ? 'Turn Left' : "Turn Right";
             let icon = !Boolean(angle) ? "arrow-up": angle == 0  ? "arrow-up" : angle < 180 ? 'arrow-left' : "arrow-right";
 
-            listItem.innerHTML = "<span class='directions-icon'>"+
+            listItem.innerHTML = "<span class='icon-directions'>"+
             "<i class='fa fa-"+ icon +"'></i>"+
             "</span>";
 
