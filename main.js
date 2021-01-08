@@ -191,21 +191,58 @@ map.on('load', function() {
     // Load the points
     map.addSource('points', {
         type:'geojson',
-        data:points
+        data:'points_annotations.geojson'
+    });
+
+    map.addLayer({
+        id:"points_labels",
+        type:"symbol",
+        source:"points",
+        filter:["==", ['get', "level"], 0],
+        paint:{
+            'text-color':'#333',
+            'text-halo-width':3,
+            'text-halo-color':'white',
+            'text-halo-blur':0.8,
+            'text-color':'#333',
+        },
+        layout:{
+            'text-field':['get', 'feature'],
+            'text-size':10,
+            'text-offset':[0, 0.7],
+            'visibility':'visible'
+        }   
     });
 
     map.addLayer({
         id:"points_2d",
-        type:"symbol",
+        type:"circle",
         source:"points",
-        filter:["==", ["get", "level"], 0],
+        filter:["==", ['get', "level"], 0],
         paint:{
-            'icon-color':'red'
+            'circle-radius':3,
+            'circle-stroke-width':1,
+            'circle-stroke-color':'#333',
+            'circle-color':[
+                'match',
+                ['get', 'feature'],
+                'Dustbin',
+                'red',
+                'Notice Board',
+                '#34d',
+                'Stair',
+                'white',
+                'Fire Extiguisher',
+                '#a3d',
+                'Suggestion Box',
+                '#ccc',
+                'WaterPoint',
+                'blue',
+                'gray',
+            ],
         },
         layout:{
-            'icon-image':'marker-15',
-            'icon-size':2,
-            'visibility':'none'
+            'visibility':'visible'
         }   
     });
 
@@ -231,6 +268,8 @@ map.on('load', function() {
             'line-width': 5
         }
     });
+
+    
 
     console.timeEnd("Loading Map");
 });
@@ -443,6 +482,10 @@ function floorToggler(value) {
     // update active floor
     activeFloor = value;
     let activeLayerId = layers[value];
+    
+    // update the poin annotations
+    map.setFilter('points_2d', ["==", ['get', "level"], parseInt(value)]);
+    map.setFilter('points_labels', ["==", ['get', "level"], parseInt(value)]);
 
     // update 
     if(activeMode == "3D") {
